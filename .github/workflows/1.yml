@@ -50,6 +50,10 @@ jobs:
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH: ${TMATE_SSH}"
           echo "Use the above SSH command to connect to the tmate session."
+
+          # Detach from the session instead of exiting
+          tmate -S /tmp/tmate.sock detach-client
+
           while true; do 
             echo "Keeping tmate session alive..."
             sleep 300
