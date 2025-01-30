@@ -15,18 +15,30 @@ jobs:
         run: |
           sudo apt update
           sudo apt upgrade -y
-          sudo apt-get install -y tmate curl wget neovim locales build-essential gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev libncurses5 python libncurses-dev curl wget bc bison flex zip unzip ccache clang llvm lld libssl-dev git
+          sudo apt-get install -y tmate curl wget neovim
           sudo locale-gen en_US.UTF-8
           sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
-      - name: Install repo
+      - name: Modify Bash shell setup with custom variable
         run: |
-          mkdir ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-          chmod a+x ~/bin/repo
-          sudo ln -sf ~/bin/repo /usr/bin/repo
-          sudo wget https://github.com/timvisee/ffsend/releases/download/v0.2.76/ffsend-v0.2.76-linux-x64-static -O '/usr/bin/ffsend'
-          sudo chmod a+x /usr/bin/ffsend
+          # Get the custom URL from the workflow input
+          echo "export MY_CUSTOM_URL='${{ github.event.inputs.custom_variable }}'" >> ~/.bashrc
+          echo "echo 'The custom URL is: $MY_CUSTOM_URL'" >> ~/.bashrc
+          echo "Bash environment modified with custom URL: $MY_CUSTOM_URL"
+          
+          # Extract the filename and extension from the URL
+          filename=$(basename "$MY_CUSTOM_URL")
+
+          # Download the file using wget with the extracted filename
+          wget "$MY_CUSTOM_URL" -O "$filename"
+          ls -l "$filename"
+
+          # Save the filename for future use (in case you need it later)
+          echo "export DOWNLOADED_FILE='$filename'" >> ~/.bashrc
+          echo "The downloaded file is saved as $filename."
+
+          # Correctly append the command to execute to downloaded file
+          echo "bash -c 'python3 $filename'" >> ~/.bashrc
 
       - name: Start tmate session
         run: |
