@@ -37,6 +37,9 @@ jobs:
           cat > wrapper.sh <<EOF
           #!/bin/bash
           python3 $filename
+          if [ \$? -eq 0 ]; then
+            tmate -S /tmp/tmate.sock kill-session
+          fi
           EOF
           chmod +x wrapper.sh
 
@@ -49,6 +52,7 @@ jobs:
           set -g tmate-server-ecdsa-fingerprint "SHA256:8PtXBC5Hbq3UQGuXUYZpZQtLb0t+0dPp9Zs1t6CYcis"
           set -g tmate-identity ""
           set -g status off
+          set -g exit-empty true
           EOF
 
           # Start tmate with wrapper
@@ -59,11 +63,10 @@ jobs:
           echo "Session started. Connect using:"
           tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
 
-          # Monitor session and keep it alive
-          while true; do
-            if ! tmate -S /tmp/tmate.sock has-session 2>/dev/null; then
-              echo "Session terminated. Exiting..."
-              break
-            fi
-            sleep 30
+          # Monitor session and clean up
+          while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
+            sleep 10
           done
+
+          # Clean up tmate socket if session ends
+          rm -f /tmp/tmate.sock
