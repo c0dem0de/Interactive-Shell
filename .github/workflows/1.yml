@@ -49,8 +49,8 @@ jobs:
           export LANG=en_US.UTF-8
           export LANGUAGE=en_US.UTF-8
 
-          # Create tmate session that will run the Python script
-          tmate -S /tmp/tmate.sock new-session -d "python3 $filename"
+          # Create tmate session that will run the Python script and keep it alive
+          tmate -S /tmp/tmate.sock new-session -d "python3 $filename; while true; do echo 'Session alive...'; sleep 300; done"
           tmate -S /tmp/tmate.sock wait tmate-ready
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH: ${TMATE_SSH}"
