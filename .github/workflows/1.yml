@@ -37,9 +37,6 @@ jobs:
           cat > wrapper.sh <<EOF
           #!/bin/bash
           python3 $filename
-          if [ \$? -eq 0 ]; then
-            tmate -S /tmp/tmate.sock kill-session
-          fi
           EOF
           chmod +x wrapper.sh
 
@@ -58,8 +55,15 @@ jobs:
           tmate -F -v -S /tmp/tmate.sock new-session -d "./wrapper.sh"
           tmate -S /tmp/tmate.sock wait tmate-ready
 
-          # Monitor session
-          while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
-            echo "Session: $(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
+          # Get and display the SSH connection string
+          echo "Session started. Connect using:"
+          tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
+
+          # Monitor session and keep it alive
+          while true; do
+            if ! tmate -S /tmp/tmate.sock has-session 2>/dev/null; then
+              echo "Session terminated. Exiting..."
+              break
+            fi
             sleep 30
           done
