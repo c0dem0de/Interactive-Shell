@@ -21,9 +21,10 @@ jobs:
           sudo add-apt-repository ppa:deadsnakes/ppa
           sudo apt update
           sudo apt upgrade -y
-          sudo apt-get install -y tmate curl wget neovim bash python3.12 python3-urwid python3-pyfiglet
+          sudo apt-get install -y tmate curl wget neovim bash python3.12
           sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
           sudo update-alternatives --config python3
+          sudo apt-get install -y python3-urwid python3-pyfiglet
           sudo locale-gen en_US.UTF-8
           sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
