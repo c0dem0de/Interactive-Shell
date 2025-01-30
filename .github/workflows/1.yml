@@ -27,10 +27,8 @@ jobs:
       - name: Modify Bash shell setup with custom variable
         run: |
           # Get the custom URL from the workflow input
-          echo "export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'" >> ~/.bashrc
-          echo "echo 'The custom URL is: $MY_CUSTOM_URL'" >> ~/.bashrc
-          export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}"
-          echo "Bash environment modified with custom URL: $MY_CUSTOM_URL"
+          export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'
+          echo 'The custom URL is: $MY_CUSTOM_URL'
 
           # Extract the filename and extension from the URL
           filename=$(basename "$MY_CUSTOM_URL")
@@ -38,13 +36,6 @@ jobs:
           # Download the file using wget with the extracted filename
           wget "$MY_CUSTOM_URL" -O "$filename"
           ls -l "$filename"
-
-          # Save the filename for future use (in case you need it later)
-          echo "export DOWNLOADED_FILE='$filename'" >> ~/.bashrc
-          echo "The downloaded file is saved as $filename."
-
-          # Correctly append the command to execute the downloaded file
-          echo "bash -c 'python3 $filename'" >> ~/.bashrc
 
       - name: Start tmate session
         run: |
@@ -55,7 +46,7 @@ jobs:
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
 
-          TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
+          tmate -S /tmp/tmate.sock -c "bash $filename" & TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH: ${TMATE_SSH}"
           echo "Use the above SSH command to connect to the tmate session."
 
