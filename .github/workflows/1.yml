@@ -50,10 +50,9 @@ jobs:
           export LANG=en_US.UTF-8
           export LANGUAGE=en_US.UTF-8
 
-          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock new-session -c "python3 $filename"
           tmate -S /tmp/tmate.sock wait tmate-ready
 
-          tmate -S /tmp/tmate.sock -c "python3 $filename" 
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH: ${TMATE_SSH}"
           echo "Use the above SSH command to connect to the tmate session."
