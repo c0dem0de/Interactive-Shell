@@ -42,18 +42,19 @@ jobs:
 
           # Download the file using wget with the extracted filename
           wget "$MY_CUSTOM_URL" -O "$filename"
-          ls -l "$filename"
+          ls -l "$filename" && pwd
+          echo "python3 filename" >> ~/.bashrc
           
           export LC_ALL=en_US.UTF-8
           export LANG=en_US.UTF-8
           export LANGUAGE=en_US.UTF-8
 
-          tmate -S /tmp/tmate.sock new-session -d -c "python3 $filename"
+          tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
+          tmate -S /tmp/tmate.sock -c "bash"
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH: ${TMATE_SSH}"
           echo "Use the above SSH command to connect to the tmate session."
-          
           while true; do 
             echo "Keeping tmate session alive..."
             sleep 300
