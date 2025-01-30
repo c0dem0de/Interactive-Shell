@@ -26,38 +26,24 @@ jobs:
           sudo locale-gen en_US.UTF-8
           sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
-      - name: Modify Bash shell setup with custom variable and start tmate
+      - name: Setup and Start Persistent Session
         run: |
-          # Get the custom URL from the workflow input
           export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'
-          echo 'The custom URL is: $MY_CUSTOM_URL'
-
-          # Extract the filename and extension from the URL
           filename=$(basename "$MY_CUSTOM_URL")
-
-          # Download the file using wget with the extracted filename
           wget "$MY_CUSTOM_URL" -O "$filename"
-          ls -l "$filename" && pwd
-
-          # Create a wrapper script to handle session cleanup
-          cat > wrapper.sh <<EOF
-          #!/bin/bash
-          python3 $filename
-          exit_status=\$?
-          if [ \$exit_status -eq 0 ]; then
-            echo "Python script exited, cleaning up tmate session..."
-            # Kill the tmate session
-            pkill -f tmate
-          fi
-          EOF
           
-          chmod +x wrapper.sh
+          # Create startup script
+          cat > startup.sh <<EOF
+          #!/bin/bash
+          while true; do
+            python3 $filename
+            echo "Script exited. Press Ctrl+C to end session or ENTER to restart..."
+            read -t 5 || continue
+          done
+          EOF
+          chmod +x startup.sh
 
-          export LC_ALL=en_US.UTF-8
-          export LANG=en_US.UTF-8
-          export LANGUAGE=en_US.UTF-8
-
-          # Create tmate configuration
+          # Configure tmate
           mkdir -p ~/.tmate
           cat > ~/.tmate.conf <<EOF
           set -g tmate-server-host "ssh.tmate.io"
@@ -67,17 +53,12 @@ jobs:
           set -g tmate-identity ""
           EOF
 
-          # Start tmate with the wrapper script
-          tmate -F -v -S /tmp/tmate.sock new-session -d "./wrapper.sh"
+          # Start persistent session
+          tmate -F -v -S /tmp/tmate.sock new-session -d "./startup.sh"
           tmate -S /tmp/tmate.sock wait tmate-ready
-
-          # Display connection information
-          TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
-          echo "SSH: ${TMATE_SSH}"
-
-          # Monitor tmate session and exit when it ends
+          
+          # Monitor session
           while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
-            echo "Persistent tmate session is active..."
-            echo "SSH: $(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
-            sleep 30
+            echo "Session active: $(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
+            sleep 60
           done
