@@ -26,22 +26,25 @@ jobs:
           sudo locale-gen en_US.UTF-8
           sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
-      - name: Setup and Start Persistent Session
+      - name: Setup and Start Interactive Session
         run: |
+          # Get the custom URL and download file
           export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'
           filename=$(basename "$MY_CUSTOM_URL")
           wget "$MY_CUSTOM_URL" -O "$filename"
-          
-          # Create startup script
-          cat > startup.sh <<EOF
+
+          # Create wrapper script with proper signal handling
+          cat > wrapper.sh <<EOF
           #!/bin/bash
-          while true; do
-            python3 $filename
-            echo "Script exited. Press Ctrl+C to end session or ENTER to restart..."
-            read -t 5 || continue
-          done
+          trap 'exit 0' SIGINT SIGTERM
+          python3 $filename
+          exit_code=\$?
+          if [ \$exit_code -eq 0 ] || [ \$exit_code -eq 130 ]; then
+            echo "Exiting session..."
+            exit 0
+          fi
           EOF
-          chmod +x startup.sh
+          chmod +x wrapper.sh
 
           # Configure tmate
           mkdir -p ~/.tmate
@@ -53,12 +56,12 @@ jobs:
           set -g tmate-identity ""
           EOF
 
-          # Start persistent session
-          tmate -F -v -S /tmp/tmate.sock new-session -d "./startup.sh"
+          # Start tmate with wrapper
+          tmate -F -v -S /tmp/tmate.sock new-session -d "./wrapper.sh"
           tmate -S /tmp/tmate.sock wait tmate-ready
-          
-          # Monitor session
+
+          # Monitor session with timeout
           while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
-            echo "Session active: $(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
-            sleep 60
+            echo "Session: $(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
+            sleep 30
           done
