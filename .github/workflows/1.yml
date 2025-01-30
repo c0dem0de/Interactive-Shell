@@ -20,7 +20,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt upgrade -y
-          sudo apt-get install -y tmate curl wget neovim
+          sudo apt-get install -y tmate curl wget neovim bash 
           sudo locale-gen en_US.UTF-8
           sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
