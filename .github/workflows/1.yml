@@ -44,7 +44,7 @@ jobs:
           export LANG=en_US.UTF-8
           export LANGUAGE=en_US.UTF-8
 
-          # Create tmate configuration file to enable persistent sessions
+          # Create tmate configuration
           mkdir -p ~/.tmate
           cat > ~/.tmate.conf <<EOF
           set -g tmate-server-host "ssh.tmate.io"
@@ -52,25 +52,19 @@ jobs:
           set -g tmate-server-rsa-fingerprint   "SHA256:Hthk2T/M/Ivqfk1YYUn5ijC2Att3+UPzD7Rn72P5VWs"
           set -g tmate-server-ecdsa-fingerprint "SHA256:8PtXBC5Hbq3UQGuXUYZpZQtLb0t+0dPp9Zs1t6CYcis"
           set -g tmate-identity ""
-          set -g tmate-session-share-strategy server
           EOF
 
-          # Start tmate in detached mode with session persistence
+          # Start tmate in detached mode
           tmate -F -v -S /tmp/tmate.sock new-session -d "python3 $filename"
           tmate -S /tmp/tmate.sock wait tmate-ready
 
           # Display connection information
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
-          TMATE_WEB=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')
-          
           echo "SSH: ${TMATE_SSH}"
-          echo "Web URL: ${TMATE_WEB}"
-          echo "Use either the SSH command or Web URL to connect to the persistent tmate session."
           
-          # Keep the session alive and periodically display connection info
+          # Keep the session alive
           while true; do 
             echo "Persistent tmate session is active..."
             echo "SSH: $(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
-            echo "Web URL: $(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')"
             sleep 300
           done
