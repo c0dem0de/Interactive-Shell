@@ -52,7 +52,7 @@ jobs:
           set -g tmate-server-ecdsa-fingerprint "SHA256:8PtXBC5Hbq3UQGuXUYZpZQtLb0t+0dPp9Zs1t6CYcis"
           set -g tmate-identity ""
           set -g status off
-          set -g exit-empty true
+          set -g server-idle-time 1800
           EOF
 
           # Start tmate with wrapper
