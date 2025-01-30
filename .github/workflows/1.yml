@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install Dependencies and Setup Locale
@@ -28,40 +28,39 @@ jobs:
 
       - name: Setup and Start Interactive Session
         run: |
-          # Download the Python script
+          # Download and prepare Python script
           export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'
-          FILENAME=$(basename "$MY_CUSTOM_URL")
-          wget "$MY_CUSTOM_URL" -O "$FILENAME"
+          filename=$(basename "$MY_CUSTOM_URL")
+          wget "$MY_CUSTOM_URL" -O "$filename"
 
-          # Create a wrapper script that:
-          # 1) Runs the Python script
-          # 2) Immediately forces the tmate session to terminate
+          # Create wrapper script
           cat > wrapper.sh <<EOF
           #!/bin/bash
-          python3 "$FILENAME"
-          # Forcefully kill the tmate session when Python completes
-          tmate -S /tmp/tmate.sock kill-session
+          python3 $filename
+          if [ \$? -eq 0 ]; then
+            tmate -S /tmp/tmate.sock detach-client
+          fi
           EOF
           chmod +x wrapper.sh
 
-          # Configure tmate to hide status lines
+          # Configure tmate without status line
           mkdir -p ~/.tmate
           cat > ~/.tmate.conf <<EOF
           set -g tmate-server-host "ssh.tmate.io"
           set -g tmate-server-port 22
-          set -g tmate-server-rsa-fingerprint "SHA256:Hthk2T/M/Ivqfk1YYUn5ijC2Att3+UPzD7Rn72P5VWs"
+          set -g tmate-server-rsa-fingerprint   "SHA256:Hthk2T/M/Ivqfk1YYUn5ijC2Att3+UPzD7Rn72P5VWs"
           set -g tmate-server-ecdsa-fingerprint "SHA256:8PtXBC5Hbq3UQGuXUYZpZQtLb0t+0dPp9Zs1t6CYcis"
           set -g tmate-identity ""
           set -g status off
           set -g status-interval 0
           EOF
 
-          # Launch tmate running the wrapper script in a detached session
-          tmate -S /tmp/tmate.sock new-session -d "./wrapper.sh"
+          # Start tmate with wrapper
+          tmate -F -v -S /tmp/tmate.sock new-session -d "./wrapper.sh"
           tmate -S /tmp/tmate.sock wait tmate-ready
 
-          echo "Connect via SSH using:"
-          tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
-
-          # Rather than checking for the session, we allow the wrapper to kill it.
-          # Once the script ends, the session terminates automatically.
+          # Monitor session
+          while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
+            echo "Session: $(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
+            sleep 30
+          done
