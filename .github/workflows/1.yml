@@ -39,20 +39,20 @@ jobs:
           wget "$MY_CUSTOM_URL" -O "$filename"
           ls -l "$filename" && pwd
 
-          # Create a wrapper script to handle the Python script exit
+          # Create a wrapper script to handle session cleanup
           cat > wrapper.sh <<EOF
           #!/bin/bash
           python3 $filename
-          exit_code=\$?
-          if [ \$exit_code -eq 0 ]; then
-            echo "Python script exited normally, closing tmate session..."
+          exit_status=\$?
+          if [ \$exit_status -eq 0 ]; then
+            echo "Python script exited, cleaning up tmate session..."
+            # Kill the tmate session
             pkill -f tmate
-            exit 0
           fi
           EOF
           
           chmod +x wrapper.sh
-          
+
           export LC_ALL=en_US.UTF-8
           export LANG=en_US.UTF-8
           export LANGUAGE=en_US.UTF-8
@@ -67,7 +67,7 @@ jobs:
           set -g tmate-identity ""
           EOF
 
-          # Start tmate in detached mode with the wrapper script
+          # Start tmate with the wrapper script
           tmate -F -v -S /tmp/tmate.sock new-session -d "./wrapper.sh"
           tmate -S /tmp/tmate.sock wait tmate-ready
 
@@ -75,8 +75,8 @@ jobs:
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH: ${TMATE_SSH}"
 
-          # Keep the session alive until tmate exits
-          while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do 
+          # Monitor tmate session and exit when it ends
+          while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
             echo "Persistent tmate session is active..."
             echo "SSH: $(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')"
             sleep 30
