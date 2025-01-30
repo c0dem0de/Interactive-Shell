@@ -2,9 +2,9 @@ name: Interactive Shell
 
 on:
   workflow_dispatch:
-   inputs:
+    inputs:
       raw_file:
-        description: "Raw file url that'll be run in the shell upon connecting"
+        description: "Raw file URL that'll be run in the shell upon connecting"
         required: true
         default: 'https://raw.githubusercontent.com/c0dem0de/TUIs/refs/heads/main/app.py'
 
@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
+
       - name: Install Dependencies and Setup Locale
         run: |
           sudo apt update
@@ -30,7 +30,7 @@ jobs:
           echo "export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'" >> ~/.bashrc
           echo "echo 'The custom URL is: $MY_CUSTOM_URL'" >> ~/.bashrc
           echo "Bash environment modified with custom URL: $MY_CUSTOM_URL"
-          
+
           # Extract the filename and extension from the URL
           filename=$(basename "$MY_CUSTOM_URL")
 
@@ -42,7 +42,7 @@ jobs:
           echo "export DOWNLOADED_FILE='$filename'" >> ~/.bashrc
           echo "The downloaded file is saved as $filename."
 
-          # Correctly append the command to execute to downloaded file
+          # Correctly append the command to execute the downloaded file
           echo "bash -c 'python3 $filename'" >> ~/.bashrc
 
       - name: Start tmate session
@@ -50,12 +50,15 @@ jobs:
           export LC_ALL=en_US.UTF-8
           export LANG=en_US.UTF-8
           export LANGUAGE=en_US.UTF-8
+
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
+
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH: ${TMATE_SSH}"
           echo "Use the above SSH command to connect to the tmate session."
-          while true; do 
+
+          while true; do
             echo "Keeping tmate session alive..."
             sleep 300
             tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
