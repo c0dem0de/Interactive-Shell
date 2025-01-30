@@ -44,13 +44,22 @@ jobs:
           export LANG=en_US.UTF-8
           export LANGUAGE=en_US.UTF-8
 
-          # Create tmate session that will run the Python script
-          tmate -S /tmp/tmate.sock new-session -d "python3 $filename"
+          # Start a new tmate session in detached mode
+          tmate -S /tmp/tmate.sock new-session -d
+
+          # After the session is ready, "send" the Python command to that session
           tmate -S /tmp/tmate.sock wait tmate-ready
+          tmate -S /tmp/tmate.sock send-keys "python3 $filename" Enter
+
+          # Print connection info
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
-          echo "SSH: ${TMATE_SSH}"
-          echo "Use the above SSH command to connect to the tmate session."
-          while true; do 
+          TMATE_WEB=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')
+          echo "SSH:  ${TMATE_SSH}"
+          echo "Web:  ${TMATE_WEB}"
+          echo "Use the SSH or Web link above to connect to the tmate session."
+
+          # Keep the session open
+          while true; do
             echo "Keeping tmate session alive..."
             sleep 300
             tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
