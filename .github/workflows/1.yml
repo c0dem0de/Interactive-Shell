@@ -28,46 +28,41 @@ jobs:
 
       - name: Setup and Start Interactive Session
         run: |
-          # Download and prepare Python script
+          # Download Python script
           export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'
           filename=$(basename "$MY_CUSTOM_URL")
           wget "$MY_CUSTOM_URL" -O "$filename"
-
+          
           # Create wrapper script
           cat > wrapper.sh <<EOF
           #!/bin/bash
-          python3 $filename
-          if [ \$? -eq 0 ]; then
-            tmate -S /tmp/tmate.sock detach-client
-          fi
+          python3 "$filename"
+          [ \$? -eq 0 ] && tmate -S /tmp/tmate.sock detach-client
           EOF
           chmod +x wrapper.sh
 
-          # Configure tmate without status line
+          # Configure tmate (hide status)
           mkdir -p ~/.tmate
           cat > ~/.tmate.conf <<EOF
           set -g tmate-server-host "ssh.tmate.io"
           set -g tmate-server-port 22
-          set -g tmate-server-rsa-fingerprint   "SHA256:Hthk2T/M/Ivqfk1YYUn5ijC2Att3+UPzD7Rn72P5VWs"
+          set -g tmate-server-rsa-fingerprint "SHA256:Hthk2T/M/Ivqfk1YYUn5ijC2Att3+UPzD7Rn72P5VWs"
           set -g tmate-server-ecdsa-fingerprint "SHA256:8PtXBC5Hbq3UQGuXUYZpZQtLb0t+0dPp9Zs1t6CYcis"
           set -g tmate-identity ""
           set -g status off
           set -g status-interval 0
           EOF
 
-          # Start tmate with wrapper
-          tmate -F -v -S /tmp/tmate.sock new-session -d "./wrapper.sh"
+          # Start the session
+          tmate -S /tmp/tmate.sock new-session -d "./wrapper.sh"
           tmate -S /tmp/tmate.sock wait tmate-ready
-
-          # Get and display the SSH connection string
-          echo "Session started. Connect using:"
+          
+          echo "Connect using:"
           tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
-
-          # Monitor session and keep it alive
-          while true; do
-            if ! tmate -S /tmp/tmate.sock has-session 2>/dev/null; then
-              echo "Session terminated. Exiting..."
-              break
-            fi
-            sleep 30
+          
+          # Monitor until the session ends
+          while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
+            sleep 10
           done
+
+          rm -f /tmp/tmate.sock
