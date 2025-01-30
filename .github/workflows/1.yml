@@ -51,7 +51,6 @@ jobs:
 
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
-          tmate -S /tmp/tmate.sock send-keys "python3 $filename" C-m
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           tmate -c "ls" -S /tmp/tmate.sock
           echo "SSH: ${TMATE_SSH}"
