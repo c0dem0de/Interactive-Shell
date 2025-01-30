@@ -53,7 +53,7 @@ jobs:
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
 
-          tmate -S /tmp/tmate.sock -c "bash -c 'python3 $filename'" 
+          tmate -S /tmp/tmate.sock -c "python3 $filename" 
           TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
           echo "SSH: ${TMATE_SSH}"
           echo "Use the above SSH command to connect to the tmate session."
