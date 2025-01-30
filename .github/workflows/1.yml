@@ -29,6 +29,7 @@ jobs:
           # Get the custom URL from the workflow input
           echo "export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'" >> ~/.bashrc
           echo "echo 'The custom URL is: $MY_CUSTOM_URL'" >> ~/.bashrc
+          export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}"
           echo "Bash environment modified with custom URL: $MY_CUSTOM_URL"
 
           # Extract the filename and extension from the URL
