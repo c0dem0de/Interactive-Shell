@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v3
 
       - name: Install Dependencies and Setup Locale
@@ -28,23 +28,23 @@ jobs:
 
       - name: Setup and Start Interactive Session
         run: |
-          # Download and prepare Python script
+          # Download the Python script
           export MY_CUSTOM_URL='${{ github.event.inputs.raw_file }}'
-          filename=$(basename "$MY_CUSTOM_URL")
-          wget "$MY_CUSTOM_URL" -O "$filename"
+          FILENAME=$(basename "$MY_CUSTOM_URL")
+          wget "$MY_CUSTOM_URL" -O "$FILENAME"
 
-          # Create wrapper script
+          # Create a wrapper script that:
+          # 1) Runs the Python script
+          # 2) Immediately forces the tmate session to terminate
           cat > wrapper.sh <<EOF
           #!/bin/bash
-          python3 "$filename"
-          # Detach the client upon successful script exit instead of killing the session
-          if [ \$? -eq 0 ]; then
-            tmate -S /tmp/tmate.sock detach-client
-          fi
+          python3 "$FILENAME"
+          # Forcefully kill the tmate session when Python completes
+          tmate -S /tmp/tmate.sock kill-session
           EOF
           chmod +x wrapper.sh
 
-          # Configure tmate (hide status line)
+          # Configure tmate to hide status lines
           mkdir -p ~/.tmate
           cat > ~/.tmate.conf <<EOF
           set -g tmate-server-host "ssh.tmate.io"
@@ -56,19 +56,12 @@ jobs:
           set -g status-interval 0
           EOF
 
-          # Start tmate with wrapper
-          tmate -F -v -S /tmp/tmate.sock new-session -d "./wrapper.sh"
+          # Launch tmate running the wrapper script in a detached session
+          tmate -S /tmp/tmate.sock new-session -d "./wrapper.sh"
           tmate -S /tmp/tmate.sock wait tmate-ready
 
-          # Show connection info
-          echo "Connect using:"
+          echo "Connect via SSH using:"
           tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
-          echo "The session will remain alive on the server if the script exits."
-          echo "When the script completes, you'll detach locally but can reconnect using the same SSH address."
 
-          # Monitor session
-          while tmate -S /tmp/tmate.sock has-session 2>/dev/null; do
-            sleep 10
-          done
-
-          rm -f /tmp/tmate.sock
+          # Rather than checking for the session, we allow the wrapper to kill it.
+          # Once the script ends, the session terminates automatically.
