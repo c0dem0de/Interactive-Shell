@@ -38,7 +38,7 @@ jobs:
           #!/bin/bash
           python3 $filename
           if [ \$? -eq 0 ]; then
-            tmate -S /tmp/tmate.sock detach-client
+            tmate -S /tmp/tmate.sock send-keys C-b d
             exit
           fi
           EOF
