@@ -6,7 +6,7 @@ on:
       raw_file:
         description: "Raw file URL that'll be run in the shell upon connecting"
         required: true
-        default: "https://raw.githubusercontent.com/c0dem0de/TUIs/refs/heads/main/app.py"
+        default: "https://raw.githubusercontent.com/c0dem0de/TUIs/refs/heads/main/jikanApp.py"
 
 jobs:
   interactive_shell:
@@ -22,7 +22,7 @@ jobs:
           sudo apt update
           sudo apt upgrade -y
           sudo apt-get install -y tmate curl wget neovim bash
-          sudo apt-get install -y python3-urwid python3-pyfiglet
+          sudo apt-get install -y python3-urwid python3-pyfiglet, python3-requests
           sudo locale-gen en_US.UTF-8
           sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
