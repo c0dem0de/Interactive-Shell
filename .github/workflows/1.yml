@@ -38,7 +38,8 @@ jobs:
           #!/bin/bash
           python3 $filename
           if [ \$? -eq 0 ]; then
-            tmate -S /tmp/tmate.sock detach-client -d
+            tmate -S /tmp/tmate.sock detach-client
+            exit
           fi
           EOF
           chmod +x wrapper.sh
